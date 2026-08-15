@@ -8,13 +8,13 @@
     --bg-card: #f9fafb;
     --bg-hover: #f3f4f6;
     --bg-input: #ffffff;
-    --color-primary: #3b82f6;
-    --color-primary-light: #dbeafe;
-    --color-primary-dark: #1e40af;
+    --color-primary: #000000;
+    --color-accent: #3b82f6;
     --status-safe: #10b981;
     --status-warning: #f59e0b;
     --status-critical: #ef4444;
-    --text-primary: #1f2937;
+    --text-primary: #000000;
+    --text-body: #374151;
     --text-secondary: #6b7280;
     --text-muted: #9ca3af;
     --border-color: #e5e7eb;
@@ -30,12 +30,27 @@
 
   /* Accessible focus indicators */
   :focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid #000000;
     outline-offset: 2px;
   }
 }
 
-/* Custom scrollbars for clean aesthetic */
+/* Ethereal Fog Mesh Glow Container Utilities */
+.fog-mesh-bg {
+  background-image: 
+    radial-gradient(at 10% 10%, rgba(219, 234, 254, 0.6) 0px, transparent 40%),
+    radial-gradient(at 90% 10%, rgba(209, 250, 229, 0.6) 0px, transparent 40%),
+    radial-gradient(at 50% 90%, rgba(254, 226, 226, 0.35) 0px, transparent 50%);
+}
+
+.glass-mesh-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+}
+
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -51,7 +66,6 @@
   background: #9ca3af;
 }
 
-/* Print styles for printable groundwater reports */
 @media print {
   body {
     background: white !important;

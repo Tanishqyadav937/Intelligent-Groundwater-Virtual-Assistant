@@ -1,8 +1,1 @@
-{
-  "/page": "app/page.js",
-  "/alerts/page": "app/alerts/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/analysis/page": "app/analysis/page.js",
-  "/compare/page": "app/compare/page.js",
-  "/reports/page": "app/reports/page.js"
-}
+{}
