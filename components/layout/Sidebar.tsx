@@ -16,6 +16,7 @@ import {
   Settings,
   Home,
   ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export const NAV_ITEMS = [
   { label: "Home", href: "/", icon: Home },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Detailed Analysis", href: "/analysis", icon: LineChart },
+  { label: "AI Predictor", href: "/predict", icon: Sparkles },
   { label: "Compare Districts", href: "/compare", icon: GitCompare },
   { label: "Alerts & Warnings", href: "/alerts", icon: Bell, hasBadge: true },
   { label: "Reports Builder", href: "/reports", icon: FileText },

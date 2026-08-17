@@ -6,14 +6,65 @@ import { useGroundwaterStore } from "@/store/useGroundwaterStore";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Search, Sparkles, ArrowRight, MessageSquare, HelpCircle, Droplet, CheckCircle2 } from "lucide-react";
+import {
+  Search,
+  Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  SearchX,
+  MapPin,
+  Lightbulb,
+} from "lucide-react";
 import { formatNumber } from "@/lib/utils";
+
+// ---------------------------------------------------------------------------
+// Supported keyword taxonomy
+// ---------------------------------------------------------------------------
+
+/** District names and their state names that have live telemetry data. */
+const SUPPORTED_LOCATIONS = [
+  "jaipur", "rajasthan",
+  "anantapur", "andhra pradesh",
+  "latur", "maharashtra",
+  "ludhiana", "punjab",
+  "chennai", "tamil nadu",
+  "kurnool",
+];
+
+/** Topic keywords the AI assistant can respond to. */
+const SUPPORTED_TOPICS = [
+  "groundwater", "water level", "water table", "borewell", "aquifer",
+  "extraction", "recharge", "rainfall", "monsoon", "irrigation",
+  "safe", "safety", "critical", "depth", "mbgl", "meters below",
+  "depletion", "telemetry", "cgwb", "kharif", "rabi", "crop",
+  "farmers", "farming", "drip", "sprinkler", "tube-well",
+  "compare", "district", "region", "forecast", "trend",
+];
+
+/**
+ * Returns true if the query contains at least one supported location
+ * AND at least one supported topic keyword (or just a supported location
+ * on its own which implies a general groundwater status request).
+ */
+function isQuerySupported(q: string): boolean {
+  const lower = q.toLowerCase();
+  const hasLocation = SUPPORTED_LOCATIONS.some((loc) => lower.includes(loc));
+  const hasTopic = SUPPORTED_TOPICS.some((topic) => lower.includes(topic));
+  // A lone location mention (e.g. "Jaipur?") is enough — it implies a status query.
+  return hasLocation || hasTopic;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function SearchPage() {
   const { districts } = useGroundwaterStore();
   const [query, setQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
 
   const POPULAR_QUERIES = [
     "Is groundwater safe in Jaipur, Rajasthan?",
@@ -24,19 +75,21 @@ export default function SearchPage() {
 
   const handleSearch = (q: string) => {
     setQuery(q);
+    setSubmittedQuery(q);
     setIsThinking(true);
     setHasSearched(true);
+    setIsSupported(isQuerySupported(q));
     setTimeout(() => {
       setIsThinking(false);
     }, 600);
   };
 
-  // Find matching district if mentioned in query
+  // Find matching district only when the query is supported
   const matchedDistrict = districts.find(
     (d) =>
-      query.toLowerCase().includes(d.name.toLowerCase()) ||
-      query.toLowerCase().includes(d.state.toLowerCase())
-  ) || districts[0];
+      submittedQuery.toLowerCase().includes(d.name.toLowerCase()) ||
+      submittedQuery.toLowerCase().includes(d.state.toLowerCase())
+  ) ?? districts[0];
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -58,7 +111,7 @@ export default function SearchPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (query.trim()) handleSearch(query);
+              if (query.trim()) handleSearch(query.trim());
             }}
           >
             <div className="relative flex items-center shadow-card rounded-xl overflow-hidden bg-white border-2 border-primary/40 focus-within:border-primary">
@@ -106,26 +159,121 @@ export default function SearchPage() {
               <span className="text-[11px] text-neutral-muted">Verified against CGWB 2026 Telemetry</span>
             </div>
 
-            {isThinking ? (
+            {/* ── Loading state ── */}
+            {isThinking && (
               <div className="py-8 text-center text-neutral-secondary space-y-2">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="text-xs">Analyzing hydro-geological sensors and rain patterns...</p>
               </div>
-            ) : (
+            )}
+
+            {/* ── Data Not Available ── */}
+            {!isThinking && !isSupported && (
+              <div className="space-y-5">
+                <div className="flex flex-col items-center text-center gap-3 py-6">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+                    <SearchX className="w-7 h-7 text-amber-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold text-neutral-primary">
+                      No Telemetry Data Available
+                    </h3>
+                    <p className="text-xs text-neutral-secondary max-w-md leading-relaxed">
+                      INGRES AI does not have groundwater telemetry or prediction data for{" "}
+                      <strong>&ldquo;{submittedQuery}&rdquo;</strong>. This query does not match any
+                      supported location or topic in our CGWB dataset.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Supported locations */}
+                <div className="p-4 bg-background-card border border-neutral-border rounded-xl space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-neutral-primary uppercase tracking-wider">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    Supported Districts &amp; States
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {["Jaipur (Rajasthan)", "Anantapur (Andhra Pradesh)", "Latur (Maharashtra)", "Ludhiana (Punjab)", "Chennai (Tamil Nadu)", "Kurnool (Andhra Pradesh)"].map((loc) => (
+                      <span
+                        key={loc}
+                        className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary-light text-primary-dark border border-primary/20"
+                      >
+                        {loc}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Supported topics */}
+                <div className="p-4 bg-background-card border border-neutral-border rounded-xl space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-neutral-primary uppercase tracking-wider">
+                    <Lightbulb className="w-4 h-4 text-amber-500" />
+                    Supported Search Topics
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      "Groundwater level / depth",
+                      "Extraction rate",
+                      "Recharge capacity",
+                      "Monsoon & rainfall forecast",
+                      "Borewell & aquifer safety",
+                      "Irrigation advisory",
+                      "Kharif / Rabi crop guidance",
+                      "District comparison",
+                      "Telemetry trends",
+                    ].map((topic) => (
+                      <span
+                        key={topic}
+                        className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-background-hover text-neutral-secondary border border-neutral-border"
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Try these instead */}
+                <div className="pt-2 border-t border-neutral-divider space-y-2">
+                  <p className="text-xs font-semibold text-neutral-secondary">Try one of these instead:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {POPULAR_QUERIES.map((q, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSearch(q)}
+                        className="text-xs font-medium bg-background-card hover:bg-background-hover text-neutral-primary border border-neutral-border rounded-full px-3 py-1.5 transition-colors"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Supported query result ── */}
+            {!isThinking && isSupported && (
               <div className="space-y-4 text-xs sm:text-sm leading-relaxed text-neutral-primary">
                 <p>
-                  Based on recent central telemetry from <strong>{matchedDistrict.name}, {matchedDistrict.state}</strong>:
+                  Based on recent central telemetry from{" "}
+                  <strong>
+                    {matchedDistrict.name}, {matchedDistrict.state}
+                  </strong>
+                  :
                 </p>
 
-                {/* Quick Telemetry Card inside AI Response */}
+                {/* Quick Telemetry Card */}
                 <div className="p-4 bg-background-card border border-neutral-border rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <span className="text-[11px] text-neutral-secondary block">Water Level Depth</span>
-                    <span className="text-lg font-bold text-primary">{formatNumber(matchedDistrict.groundwaterLevel)} m bgl</span>
+                    <span className="text-lg font-bold text-primary">
+                      {formatNumber(matchedDistrict.groundwaterLevel)} m bgl
+                    </span>
                   </div>
                   <div>
                     <span className="text-[11px] text-neutral-secondary block">Extraction Rate</span>
-                    <span className="text-lg font-bold text-neutral-primary">{formatNumber(matchedDistrict.extractionRate)}%</span>
+                    <span className="text-lg font-bold text-neutral-primary">
+                      {formatNumber(matchedDistrict.extractionRate)}%
+                    </span>
                   </div>
                   <div>
                     <span className="text-[11px] text-neutral-secondary block">Aquifer Category</span>
@@ -135,20 +283,36 @@ export default function SearchPage() {
 
                 <div className="space-y-2">
                   <h4 className="font-bold text-neutral-primary flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Key Insights & Actionable Recommendations:
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Key Insights &amp; Actionable Recommendations:
                   </h4>
                   <ul className="list-disc pl-5 space-y-1.5 text-neutral-secondary">
-                    <li>The extraction rate in <strong>{matchedDistrict.name}</strong> stands at {matchedDistrict.extractionRate}%, categorizing the block as <strong>{matchedDistrict.status}</strong>.</li>
-                    <li>Farmers are strongly advised to adopt drip/sprinkler irrigation for upcoming Kharif crops to prevent further drawdown.</li>
-                    <li>Community rainwater harvesting structures have an estimated recharge capacity of {matchedDistrict.rechargeCapacity} mm/yr.</li>
+                    <li>
+                      The extraction rate in <strong>{matchedDistrict.name}</strong> stands at{" "}
+                      {matchedDistrict.extractionRate}%, categorizing the block as{" "}
+                      <strong>{matchedDistrict.status}</strong>.
+                    </li>
+                    <li>
+                      Farmers are strongly advised to adopt drip/sprinkler irrigation for upcoming
+                      Kharif crops to prevent further drawdown.
+                    </li>
+                    <li>
+                      Community rainwater harvesting structures have an estimated recharge capacity
+                      of {matchedDistrict.rechargeCapacity} mm/yr.
+                    </li>
                   </ul>
                 </div>
 
                 <div className="pt-3 border-t border-neutral-divider flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-[11px] text-neutral-muted">Confidence score: 98.4% | CGWB Dataset v4.2</span>
+                  <span className="text-[11px] text-neutral-muted">
+                    Confidence score: 98.4% | CGWB Dataset v4.2
+                  </span>
                   <div className="flex gap-2">
                     <Link href="/dashboard">
-                      <Button size="sm" variant="primary" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                      >
                         Go to {matchedDistrict.name} Dashboard
                       </Button>
                     </Link>
