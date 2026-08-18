@@ -1,1 +1,7 @@
-{}
+{
+  "/page": "app/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/analysis/page": "app/analysis/page.js",
+  "/predict/page": "app/predict/page.js",
+  "/api/predict/route": "app/api/predict/route.js"
+}
