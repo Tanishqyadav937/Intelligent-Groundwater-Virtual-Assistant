@@ -1,70 +1,59 @@
+import os
+import sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from ml.groundwater_model import GroundwaterPredictionModel
-
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__)
-
-# Allow requests from Next.js frontend
 CORS(app)
 
-# Load model once when server starts
-model = GroundwaterPredictionModel()
-
+try:
+    from ml.groundwater_model import GroundwaterPredictionModel
+    print("Loading groundwater model...")
+    model = GroundwaterPredictionModel()
+    print("✓ Model loaded successfully!")
+except Exception as e:
+    print(f"ERROR loading model: {e}")
+    model = None
 
 @app.route("/", methods=["GET"])
 def home():
-
-    return jsonify({
-        "success": True,
-        "message": "INGRES AI Groundwater Prediction API is running"
-    })
-
+    return jsonify({"message": "INGRES AI Groundwater Backend Active"})
 
 @app.route("/health", methods=["GET"])
 def health():
-
-    return jsonify({
-        "status": "OK"
-    })
-
+    return jsonify({"status": "healthy"})
 
 @app.route("/api/model-info", methods=["GET"])
 def model_info():
-
-    return jsonify({
-        "success": True,
-        "data": model.get_info()
-    })
-
+    if not model:
+        return jsonify({"error": "Model not loaded"}), 500
+    try:
+        info = model.get_info()
+        return jsonify(info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
-
+    if not model:
+        return jsonify({"status": "error", "message": "Model not loaded"}), 500
+    
     try:
-
-        print("Received Payload:", request.json)
-
-        result = model.predict_from_dict(request.json)
-
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No JSON data provided"}), 400
+        
+        prediction = model.predict_from_dict(data)
         return jsonify({
-            "prediction": float(result),
-            "status": "success"
+            "status": "success",
+            "prediction": float(prediction),
+            "unit": "meters"
         })
-
     except Exception as e:
-
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
+        return jsonify({"status": "error", "message": str(e)}), 400
 
 if __name__ == "__main__":
-
-    app.run(
-        host="0.0.0.0",
-        port=5000,
-        debug=True
-    )
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
