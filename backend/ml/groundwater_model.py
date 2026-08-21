@@ -1,3 +1,5 @@
+
+import os
 import joblib
 import pandas as pd
 
@@ -5,8 +7,18 @@ import pandas as pd
 class GroundwaterPredictionModel:
 
     def __init__(self):
-        # Model is inside backend/models/
-        model_path = "models/groundwater_predictor.pkl"
+
+        # Get the backend directory
+        BASE_DIR = os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))
+        )
+
+        # Load trained model package
+        model_path = os.path.join(
+            BASE_DIR,
+            "models",
+            "groundwater_predictor.pkl"
+        )
 
         print("Loading groundwater model...")
 
