@@ -5,15 +5,20 @@ import pandas as pd
 class GroundwaterPredictionModel:
 
     def __init__(self):
-        model_path = "backend/models/groundwater_predictor.pkl"
+        # Model is inside backend/models/
+        model_path = "models/groundwater_predictor.pkl"
 
         print("Loading groundwater model...")
 
         self.model_package = joblib.load(model_path)
 
+        # Load trained Voting Ensemble
         self.model = self.model_package["voting_ensemble"]
+
+        # Load scaler used during training
         self.scaler = self.model_package["scaler"]
 
+        # Load feature names and metrics
         self.feature_names = self.model_package["feature_names"]
         self.metrics = self.model_package["metrics"]
 
@@ -49,24 +54,27 @@ class GroundwaterPredictionModel:
     def predict_from_dict(self, data: dict):
 
         feature_names = [
-            'rainfall',
-            'temperature',
-            'extraction_rate',
-            'recharge_capacity',
-            'population',
-            'irrigation_area'
+            "rainfall",
+            "temperature",
+            "extraction_rate",
+            "recharge_capacity",
+            "population",
+            "irrigation_area"
         ]
 
-        # Build DataFrame with explicit column order and float casting
+        # Build DataFrame with explicit column order
         df = pd.DataFrame(
             [[float(data[f]) for f in feature_names]],
             columns=feature_names
         )
 
-        # Transform using DataFrame to preserve feature names (suppresses sklearn warnings)
+        # Transform using the scaler from training
         scaled_data = self.scaler.transform(df)
 
-        return self.model.predict(scaled_data)[0]
+        # Make prediction
+        prediction = self.model.predict(scaled_data)[0]
+
+        return float(prediction)
 
     def get_info(self):
 
