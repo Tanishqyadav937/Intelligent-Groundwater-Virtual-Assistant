@@ -90,25 +90,13 @@ export default function PredictPage() {
     console.log("Sending payload to Flask:", formData);
 
     try {
-      let response;
-      try {
-        response = await fetch("/api/predict", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        });
-      } catch {
-        // Fallback to direct backend URL if proxy route fails
-        response = await fetch("http://localhost:5000/api/predict", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        });
-      }
+      const response = await fetch("/api/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -125,20 +113,25 @@ export default function PredictPage() {
           unit: "meters",
           model_type: "voting_ensemble",
         });
+
         addToast({
           title: "Prediction Complete",
           description: `Groundwater depth estimated at ${json.prediction.toFixed(2)} meters.`,
           type: "success",
         });
       } else {
-        throw new Error(json.error || "Failed to calculate groundwater level");
+        throw new Error(
+          json.error || "Failed to calculate groundwater level"
+        );
       }
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Could not connect to Flask prediction backend (http://localhost:5000). Ensure the backend is running.";
+          : "Could not connect to the Flask prediction backend.";
+
       setError(errorMessage);
+
       addToast({
         title: "Prediction Failed",
         description: "Flask backend API is unreachable or returned an error.",
