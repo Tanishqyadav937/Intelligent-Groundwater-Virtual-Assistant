@@ -12,3 +12,5 @@ __pycache__/
 # Environment variables
 .env*
 !.env.example
+.env.local
+backend/.env.local
