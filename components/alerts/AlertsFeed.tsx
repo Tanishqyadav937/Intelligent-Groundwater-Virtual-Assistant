@@ -254,7 +254,7 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
           </p>
           <p className="text-xs text-neutral-secondary">
             {selectedSeverity 
-              ? `No ${SeverityLabels[selectedSeverity]} alerts found` 
+              ? `No ${SeverityLabels[selectedSeverity as keyof typeof SeverityLabels]} alerts found` 
               : "All systems operating normally"}
           </p>
           {selectedSeverity && (
