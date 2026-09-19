@@ -48,7 +48,8 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
 
   const [userId] = useState(() => `user-${Math.random().toString(36).substr(2, 9)}`);
   const [acknowledging, setAcknowledging] = useState<number | null>(null);
-  const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
+  type Severity = keyof typeof SeverityLabels;
+  const [selectedSeverity, setSelectedSeverity] = useState<Severity | null>(null);
 
   const handleAcknowledge = async (alertId: number) => {
     setAcknowledging(alertId);
@@ -253,7 +254,7 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
           </p>
           <p className="text-xs text-neutral-secondary">
             {selectedSeverity 
-              ? `No ${SeverityLabels[selectedSeverity as keyof typeof SeverityLabels]} alerts found` 
+              ? `No ${SeverityLabels[selectedSeverity]} alerts found` 
               : "All systems operating normally"}
           </p>
           {selectedSeverity && (
