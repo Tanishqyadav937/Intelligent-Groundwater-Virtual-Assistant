@@ -14,3 +14,4 @@ __pycache__/
 !.env.example
 .env.local
 backend/.env.local
+*.tsbuildinfo
