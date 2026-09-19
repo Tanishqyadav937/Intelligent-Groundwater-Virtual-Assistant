@@ -22,3 +22,8 @@ tzdata==2026.3
 Werkzeug==2.3.7
 xgboost==2.1.4
 zipp==3.23.1
+
+# Supabase Real-Time Alerts Dependencies
+supabase==2.3.4
+python-dotenv==1.0.0
+Flask-APScheduler==1.13.1
