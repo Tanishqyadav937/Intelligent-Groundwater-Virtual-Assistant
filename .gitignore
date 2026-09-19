@@ -8,3 +8,7 @@ __pycache__/
 
 .env
 .DS_Store
+
+# Environment variables
+.env*
+!.env.example
